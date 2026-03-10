@@ -1,3 +1,3 @@
-Project Title: Fintech-Hackathon
-Team Name: Pandas
-Project Description: It is an intelligent dashboard for asset managers that transforms fragmented market news into actionable insights. Using AI-driven narrative detection, the platform tracks evolving macro themes, highlights “hot” developments, maps cross-market impacts, and generates risk implications for portfolios. The intuitive interface allows users to explore theme timelines, visualize causal chains, and access historical market memory—enabling faster, more informed decision-making in a high-volume, high-speed market environment.
+Project Title: Global Macro Tracker
+Team Name: KVZ Clan
+Project Description: An intelligent real-time dashboard for asset managers that transforms fragmented macroeconomic data into actionable portfolio insights. The platform tracks six core macro themes — Inflation, GDP, Employment, Housing, Tech, and Energy — classifying each as HOT (elevated risk) or COOL (stable), then generates cross-market impact chains, portfolio signals, and AI-driven risk narratives. It integrates live Federal Reserve (FRED) data, computes volatility rankings and momentum indicators, and delivers per-sector portfolio recommendations (Hedge, Accumulate, Hold, etc.) — enabling faster, more informed decision-making in a high-volume, high-speed market environment.

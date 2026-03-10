@@ -1,19 +1,34 @@
-# Macro Economics Tracker
+# Global Macro Tracker
 ### Team: KVZ Clan
 
-An intelligent dashboard for asset managers that transforms fragmented market news into actionable insights. It uses sentiment classification to track evolving macroeconomic themes, highlighting **HOT** (trending/high-risk) vs **COOL** (stable/low-risk) developments, and maps them to specific financial risk outcomes.
+An intelligent real-time dashboard for asset managers that transforms fragmented macroeconomic data into actionable portfolio insights. The platform tracks six core macro themes — Inflation, GDP, Employment, Housing, Tech, and Energy — classifying each as **HOT** (elevated risk) or **COOL** (stable), then generates cross-market impact chains, portfolio signals, and AI-driven risk narratives.
+
+Built for speed: the dashboard auto-refreshes every 10 seconds, flashes updated cards, and alerts on trend flips so portfolio managers never miss a regime change.
 
 ## Key Features
-- **Real FRED Data Integration** — Pulls live macroeconomic data from the Federal Reserve (CPI, GDP, Unemployment, Housing Starts, NASDAQ, Oil)
-- **Sentiment Heatmaps** — Visual HOT vs COOL classification with color-coded heat bars
-- **Cross-Market Impact Chains** — Shows causal relationships between macro sectors
-- **Institutional Memory** — Persists and logs past market developments over time
-- **Trend-Change Alerts** — Detects when a sector flips from HOT to COOL or vice versa
-- **Risk Mapping** — Automatically maps macro themes to financial risk outcomes
-- **Live News Ticker** — Scrolling banner with breaking macro alerts
-- **Sentiment History Charts** — Click any theme to see tracked sentiment over time
-- **Theme Distribution** — Donut chart showing event distribution across sectors
-- **AI Analysis Panel** — Market-wide narrative summary with risk assessment
+
+### Core Intelligence
+- **Sentiment Classification** — Every macro event scored 0-100% and classified HOT or COOL with color-coded heat bars
+- **Cross-Market Impact Chains** — Causal mapping showing how one sector ripples into others (e.g., Inflation -> Housing -> Employment)
+- **Institutional Memory** — Persistent event log tracking all macro developments over time
+- **Trend-Change Alerts** — Real-time detection when a sector flips from HOT to COOL or vice versa
+- **Risk Mapping** — Automatic mapping of macro themes to financial risk outcomes (yield curve, credit spreads, etc.)
+
+### Analytics & Signals
+- **Market Pulse Gauge** — Aggregate risk score (0-100) combining HOT ratio and sentiment intensity across all sectors
+- **Portfolio Signals** — Per-theme actionable recommendations: Hedge, Reduce Exposure, Accumulate, Watch Closely, or Hold
+- **Volatility Ranking** — Horizontal bar chart ranking which sectors fluctuate the most
+- **Theme Momentum** — Heating/Cooling/Flat indicators per sector with HOT-to-COOL ratio bars and directional strength
+- **Sentiment Distribution** — Donut chart + sector breakdown table with bias badges (Risk-On / Stable / Neutral)
+- **AI Analysis Panel** — Market-wide narrative summary with risk level assessment and dominant theme identification
+
+### Data & UI
+- **Real FRED Data Integration** — Pulls live macroeconomic data from the Federal Reserve (CPI, GDP, Unemployment Rate, Housing Starts, NASDAQ, Oil)
+- **Live News Ticker** — Scrolling banner with breaking macro developments
+- **Sentiment History Charts** — Click any theme to see its tracked sentiment trajectory
+- **Tabbed Dashboard** — Clean 4-tab layout: Overview, Impacts, Analytics, Memory
+- **Theme Filter Chips** — Filter the event log by sector with clickable badges
+- **Auto-Refresh Polling** — 10-second live updates with connection indicator and card flash animations
 
 ## Tech Stack
 
@@ -77,11 +92,13 @@ The dashboard opens at `http://localhost:3000`.
 | `/api/alerts` | GET | Trend-change alerts (HOT/COOL flips) |
 | `/api/impacts/<theme>` | GET | Cross-market causal impact chain |
 | `/api/distribution` | GET | Sentiment distribution across themes |
+| `/api/analytics-extended` | GET | Volatility, momentum, market pulse, and portfolio signals |
 | `/api/theme-history/<theme>` | GET | Historical sentiment data for charting |
 
 ## Data Sources
 
 When `FRED_API_KEY` is set, the dashboard pulls real data from:
+
 | Series | Theme | Description |
 |--------|-------|-------------|
 | CPIAUCSL | Inflation | Consumer Price Index |
@@ -91,19 +108,19 @@ When `FRED_API_KEY` is set, the dashboard pulls real data from:
 | NASDAQCOM | Tech | NASDAQ Composite |
 | DCOILWTICO | Energy | Crude Oil Price (WTI) |
 
-Without a key, the app runs in simulation mode with realistic mock data.
+Without a key, the app runs in simulation mode with realistic mock data and dynamic headline generation.
 
 ## Project Structure
 ```
 ├── backend/
-│   ├── app.py            # Flask REST API + serves React build
-│   ├── analyzer.py       # MacroTracker engine (sentiment, risk, memory, impacts)
+│   ├── app.py            # Flask REST API (8 endpoints) + serves React build
+│   ├── analyzer.py       # MacroTracker engine (sentiment, risk, memory, impacts, analytics)
 │   └── data_fetcher.py   # FRED API integration
 ├── frontend/
 │   ├── src/
 │   │   ├── App.js
-│   │   ├── Dashboard.js  # Main dashboard (tabbed layout, 10+ sub-components)
-│   │   ├── Dashboard.css # Styles
+│   │   ├── Dashboard.js  # Main dashboard (tabbed layout, 15+ sub-components)
+│   │   ├── Dashboard.css # Styles (dark navy theme)
 │   │   └── index.js
 │   └── public/
 ├── Dockerfile            # Multi-stage build for Railway deployment
