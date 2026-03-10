@@ -121,7 +121,7 @@ const TrendCard = ({ item, isSelected, isNew, onClick }) => (
 
 /* ===== Tab Content: Overview ===== */
 
-const OverviewTab = ({ selectedTrend, themeHistory, summary, analyticsExt }) => {
+const OverviewTab = ({ selectedTrend, themeHistory, summary, analyticsExt, data }) => {
   const color = selectedTrend?.trend === 'HOT' ? '#ff4d4d' : '#4d79ff';
 
   const chartData = themeHistory.length > 0
@@ -234,6 +234,43 @@ const OverviewTab = ({ selectedTrend, themeHistory, summary, analyticsExt }) => 
                 <span className="stat-label">Dominant</span>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Sector Snapshot */}
+      {data && data.length > 0 && (
+        <div className="panel">
+          <h3>Sector Snapshot</h3>
+          <div className="snapshot-grid">
+            {data.map((item) => {
+              const mom = analyticsExt?.momentum?.[item.name];
+              const signal = analyticsExt?.portfolio_signals?.[item.name];
+              return (
+                <div key={item.name} className="snapshot-card">
+                  <div className="snapshot-header">
+                    <span className="theme-dot" style={{ backgroundColor: THEME_COLORS[item.name] || '#888' }} />
+                    <span className="snapshot-name">{item.name}</span>
+                    <span className={`trend-badge ${item.trend === 'HOT' ? 'hot' : 'cool'}`}>
+                      {item.trend}
+                    </span>
+                  </div>
+                  <div className="snapshot-score">{Math.round(item.score * 100)}%</div>
+                  <div className="snapshot-meta">
+                    {mom && (
+                      <span className={`momentum-direction ${mom.direction}`}>
+                        {mom.direction === 'heating' ? '\u2191' : mom.direction === 'cooling' ? '\u2193' : '\u2192'} {mom.direction}
+                      </span>
+                    )}
+                    {signal && (
+                      <span className={`signal-action-mini ${signal.action.toLowerCase().replace(/\s/g, '-')}`}>
+                        {signal.action}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -684,7 +721,7 @@ const MacroDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab selectedTrend={selectedTrend} themeHistory={themeHistory} summary={summary} analyticsExt={analyticsExt} />;
+        return <OverviewTab selectedTrend={selectedTrend} themeHistory={themeHistory} summary={summary} analyticsExt={analyticsExt} data={data} />;
       case 'impacts':
         return <ImpactsTab impacts={impacts} selectedTheme={selectedTrend?.name} selectedTrend={selectedTrend} analyticsExt={analyticsExt} />;
       case 'analytics':

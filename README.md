@@ -1,5 +1,5 @@
 # Global Macro Tracker
-### Team: KVZ Clan
+### Team: Pandas
 
 An intelligent real-time dashboard for asset managers that transforms fragmented macroeconomic data into actionable portfolio insights. The platform tracks six core macro themes — Inflation, GDP, Employment, Housing, Tech, and Energy — classifying each as **HOT** (elevated risk) or **COOL** (stable), then generates cross-market impact chains, portfolio signals, and AI-driven risk narratives.
 

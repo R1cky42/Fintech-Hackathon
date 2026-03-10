@@ -68,7 +68,7 @@ class MacroTracker:
     def add_market_event(self, theme, news_snippet, sentiment_score):
         """Stores news and identifies risk implications."""
         event = {
-            "timestamp": datetime.datetime.now(),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc),
             "theme": theme,
             "content": news_snippet,
             "sentiment_score": round(sentiment_score, 2),

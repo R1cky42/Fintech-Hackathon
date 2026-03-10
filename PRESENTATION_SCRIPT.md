@@ -1,5 +1,5 @@
 # Global Macro Tracker — 5-Minute Video Script
-### Team KVZ Clan (4 speakers)
+### Team Pandas (4 speakers)
 
 ---
 
@@ -7,7 +7,7 @@
 
 **[Screen: Title slide or dashboard landing page]**
 
-"Hey everyone, we're KVZ Clan and this is the Global Macro Tracker."
+"Hey everyone, we're Pandas and this is the Global Macro Tracker."
 
 "So here's the problem we set out to solve. If you're an asset manager or portfolio analyst today, you're drowning in data. CPI reports, GDP revisions, employment numbers, oil prices, tech earnings — they come from dozens of different sources, in different formats, at different times. By the time you piece together the full picture, the market has already moved."
 
@@ -79,7 +79,7 @@
 
 **[Screen: Show the live dashboard one final time]**
 
-"We're KVZ Clan, and this is the Global Macro Tracker. Thanks for watching."
+"We're Pandas, and this is the Global Macro Tracker. Thanks for watching."
 
 ---
 

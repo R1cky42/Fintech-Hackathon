@@ -130,7 +130,7 @@
 
 .news-ticker-content {
   display: inline-block;
-  animation: scroll 120s linear infinite;
+  animation: scroll 240s linear infinite;
   color: #999;
   font-size: 0.85em;
 }
@@ -654,6 +654,61 @@
   color: #fff;
 }
 
+/* ===== Sector Snapshot (Overview Tab) ===== */
+.snapshot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.snapshot-card {
+  padding: 14px;
+  background: #1a1a3e;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.snapshot-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+}
+
+.snapshot-name {
+  flex: 1;
+  font-weight: 600;
+  color: #ccc;
+}
+
+.snapshot-score {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #fff;
+}
+
+.snapshot-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.signal-action-mini {
+  font-size: 0.65em;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.signal-action-mini.hedge { background: rgba(255, 77, 77, 0.2); color: #ff6b6b; }
+.signal-action-mini.reduce-exposure { background: rgba(255, 152, 0, 0.2); color: #ffa726; }
+.signal-action-mini.accumulate { background: rgba(76, 175, 80, 0.2); color: #66bb6a; }
+.signal-action-mini.watch-closely { background: rgba(66, 165, 245, 0.2); color: #42a5f5; }
+.signal-action-mini.hold { background: rgba(150, 150, 150, 0.15); color: #999; }
+.signal-action-mini.monitor { background: rgba(150, 150, 150, 0.15); color: #999; }
+
 /* ===== Impact Severity ===== */
 .impact-severity {
   font-size: 0.7em;
@@ -918,6 +973,7 @@
 
   .metrics-strip { flex-wrap: wrap; }
   .metric-card { min-width: 80px; }
+  .snapshot-grid { grid-template-columns: 1fr 1fr; }
   .momentum-grid { grid-template-columns: 1fr; }
   .memory-stats-strip { flex-wrap: wrap; }
   .memory-stat { min-width: 70px; }
