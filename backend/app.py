@@ -94,6 +94,12 @@ def get_distribution():
     return jsonify(tracker.get_theme_distribution())
 
 
+@app.route('/api/analytics-extended', methods=['GET'])
+def get_analytics_extended():
+    """Returns extended analytics: volatility, momentum, portfolio signals."""
+    return jsonify(tracker.get_analytics_extended())
+
+
 @app.route('/api/theme-history/<theme>', methods=['GET'])
 def get_theme_history(theme):
     """Returns historical sentiment data for a specific theme (for charting)."""

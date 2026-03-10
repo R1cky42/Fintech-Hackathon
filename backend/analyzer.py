@@ -260,6 +260,128 @@ class MacroTracker:
             "data_source": self.data_source,
         }
 
+    def get_analytics_extended(self):
+        """Returns extended analytics: volatility, momentum, market pulse, and portfolio signals."""
+        themes = ["Inflation", "GDP", "Employment", "Housing", "Tech", "Energy"]
+
+        if len(self.institutional_memory) < 2:
+            return {
+                "volatility_ranking": [],
+                "momentum": {},
+                "market_pulse": 50,
+                "total_events": len(self.institutional_memory),
+                "active_alerts": len(self.alerts),
+                "most_volatile": None,
+                "portfolio_signals": {},
+                "time_range_minutes": 0,
+            }
+
+        volatility = {}
+        momentum = {}
+
+        for theme in themes:
+            events = [e for e in self.institutional_memory if e['theme'] == theme]
+            if len(events) < 2:
+                volatility[theme] = 0
+                momentum[theme] = {"direction": "flat", "strength": 0}
+                continue
+
+            scores = [e['sentiment_score'] for e in events]
+
+            # Volatility: standard deviation of scores
+            mean = sum(scores) / len(scores)
+            variance = sum((s - mean) ** 2 for s in scores) / len(scores)
+            volatility[theme] = round(variance ** 0.5, 3)
+
+            # Momentum: compare average of last 5 events vs previous 5
+            recent = scores[-5:] if len(scores) >= 5 else scores
+            older = scores[-10:-5] if len(scores) >= 10 else scores[:max(1, len(scores) // 2)]
+            recent_avg = sum(recent) / len(recent)
+            older_avg = sum(older) / len(older)
+            diff = recent_avg - older_avg
+
+            if diff > 0.05:
+                direction = "heating"
+            elif diff < -0.05:
+                direction = "cooling"
+            else:
+                direction = "flat"
+
+            momentum[theme] = {
+                "direction": direction,
+                "strength": round(abs(diff) * 100, 1),
+                "recent_avg": round(recent_avg, 2),
+                "older_avg": round(older_avg, 2),
+            }
+
+        # Sort by volatility descending
+        volatility_ranking = sorted(
+            [{"theme": t, "volatility": v} for t, v in volatility.items()],
+            key=lambda x: x["volatility"],
+            reverse=True
+        )
+
+        # Market pulse: 0-100 scale
+        recent_20 = self.institutional_memory[-20:]
+        hot_ratio = sum(1 for e in recent_20 if e['sentiment'] == 'HOT') / max(len(recent_20), 1)
+        avg_intensity = sum(e['sentiment_score'] for e in recent_20) / max(len(recent_20), 1)
+        market_pulse = round(hot_ratio * 60 + avg_intensity * 40, 0)
+
+        most_volatile = volatility_ranking[0]["theme"] if volatility_ranking else None
+
+        # Portfolio signals per theme
+        portfolio_signals = {}
+        for theme in themes:
+            events = [e for e in self.institutional_memory if e['theme'] == theme]
+            if not events:
+                portfolio_signals[theme] = {"action": "Monitor", "rationale": "Insufficient data"}
+                continue
+
+            recent = events[-5:] if len(events) >= 5 else events
+            hot_pct = sum(1 for e in recent if e['sentiment'] == 'HOT') / len(recent)
+            avg = sum(e['sentiment_score'] for e in recent) / len(recent)
+            vol = volatility.get(theme, 0)
+            mom = momentum.get(theme, {}).get("direction", "flat")
+
+            if hot_pct > 0.6 and mom == "heating":
+                action = "Hedge"
+                rationale = "Elevated risk with upward momentum — consider protective positions"
+            elif hot_pct > 0.6:
+                action = "Reduce Exposure"
+                rationale = "High activity signals — trim positions in exposed assets"
+            elif mom == "cooling" and hot_pct < 0.4:
+                action = "Accumulate"
+                rationale = "Cooling trend with stabilizing signals — opportunistic entry"
+            elif vol > 0.15:
+                action = "Watch Closely"
+                rationale = "High volatility but no clear direction — await confirmation"
+            else:
+                action = "Hold"
+                rationale = "Stable conditions — maintain current allocation"
+
+            portfolio_signals[theme] = {
+                "action": action,
+                "rationale": rationale,
+                "hot_pct": round(hot_pct * 100),
+                "avg_score": round(avg * 100),
+            }
+
+        # Time range
+        first_ts = self.institutional_memory[0]['timestamp']
+        last_ts = self.institutional_memory[-1]['timestamp']
+        time_range_minutes = round((last_ts - first_ts).total_seconds() / 60, 1)
+
+        return {
+            "volatility_ranking": volatility_ranking,
+            "momentum": momentum,
+            "market_pulse": int(market_pulse),
+            "total_events": len(self.institutional_memory),
+            "active_alerts": len(self.alerts),
+            "most_volatile": most_volatile,
+            "portfolio_signals": portfolio_signals,
+            "time_range_minutes": time_range_minutes,
+        }
+
     def simulate_live_feed(self):
         """Generates a simulated headline. If real data is available, scores are
         anchored to actual values with jitter to keep the demo dynamic."""

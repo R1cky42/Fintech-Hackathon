@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
 import './Dashboard.css';
 
@@ -26,17 +26,12 @@ const TABS = [
 
 /* ===== Sub-components ===== */
 
-const ConnectionIndicator = ({ status, dataSource }) => (
+const ConnectionIndicator = ({ status }) => (
   <div className="connection-info">
     <span className={`connection-indicator ${status}`}>
       <span className="connection-dot" />
       {status === 'connected' ? 'Live' : status === 'error' ? 'Disconnected' : 'Connecting...'}
     </span>
-    {dataSource && (
-      <span className={`data-source-badge ${dataSource}`}>
-        {dataSource === 'live' ? 'FRED DATA' : 'SIMULATED'}
-      </span>
-    )}
   </div>
 );
 
@@ -126,7 +121,7 @@ const TrendCard = ({ item, isSelected, isNew, onClick }) => (
 
 /* ===== Tab Content: Overview ===== */
 
-const OverviewTab = ({ selectedTrend, themeHistory, summary }) => {
+const OverviewTab = ({ selectedTrend, themeHistory, summary, analyticsExt }) => {
   const color = selectedTrend?.trend === 'HOT' ? '#ff4d4d' : '#4d79ff';
 
   const chartData = themeHistory.length > 0
@@ -139,8 +134,45 @@ const OverviewTab = ({ selectedTrend, themeHistory, summary }) => {
         score: Math.round((selectedTrend?.score || 0.5) * 100 + (Math.random() * 10 - 5))
       }));
 
+  const pulseColor = analyticsExt
+    ? (analyticsExt.market_pulse > 70 ? '#ff4d4d' : analyticsExt.market_pulse > 40 ? '#ffa726' : '#66bb6a')
+    : '#888';
+
   return (
     <div className="tab-content">
+      {/* Key Metrics Strip */}
+      {analyticsExt && (
+        <div className="metrics-strip">
+          <div className="metric-card pulse">
+            <div className="metric-gauge">
+              <svg viewBox="0 0 120 60" className="gauge-svg">
+                <path d="M 10 55 A 50 50 0 0 1 110 55" fill="none" stroke="#2a2a4a" strokeWidth="8" strokeLinecap="round" />
+                <path d="M 10 55 A 50 50 0 0 1 110 55" fill="none"
+                  stroke={pulseColor}
+                  strokeWidth="8" strokeLinecap="round"
+                  strokeDasharray={`${analyticsExt.market_pulse * 1.57} 157`} />
+              </svg>
+              <span className="gauge-value">{analyticsExt.market_pulse}</span>
+            </div>
+            <span className="metric-title">Market Pulse</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value">{analyticsExt.total_events}</span>
+            <span className="metric-title">Events Tracked</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value alert-value">{analyticsExt.active_alerts}</span>
+            <span className="metric-title">Trend Flips</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-value" style={{ color: THEME_COLORS[analyticsExt.most_volatile] || '#ccc' }}>
+              {analyticsExt.most_volatile || '--'}
+            </span>
+            <span className="metric-title">Most Volatile</span>
+          </div>
+        </div>
+      )}
+
       {/* Chart */}
       <div className="panel">
         <h3>
@@ -211,7 +243,7 @@ const OverviewTab = ({ selectedTrend, themeHistory, summary }) => {
 
 /* ===== Tab Content: Impacts ===== */
 
-const ImpactsTab = ({ impacts, selectedTheme }) => {
+const ImpactsTab = ({ impacts, selectedTheme, selectedTrend, analyticsExt }) => {
   if (!impacts || impacts.length === 0) {
     return (
       <div className="tab-content">
@@ -223,6 +255,8 @@ const ImpactsTab = ({ impacts, selectedTheme }) => {
     );
   }
 
+  const signal = analyticsExt?.portfolio_signals?.[selectedTheme];
+
   return (
     <div className="tab-content">
       <div className="panel">
@@ -231,28 +265,59 @@ const ImpactsTab = ({ impacts, selectedTheme }) => {
           How <strong>{selectedTheme}</strong> movements ripple across other macro sectors.
         </p>
         <div className="impact-list">
-          {impacts.map((impact, i) => (
-            <div key={i} className="impact-item">
-              <div className="impact-header">
-                <span className="impact-arrow">{selectedTheme}</span>
-                <span className="impact-connector">&rarr;</span>
-                <span className="impact-target">{impact.target}</span>
-                <span className={`impact-status ${impact.target_sentiment === 'HOT' ? 'hot' : 'cool'}`}>
-                  {impact.target_sentiment}
-                </span>
+          {impacts.map((impact, i) => {
+            const severity = Math.round(
+              ((impact.target_score || 0.5) * 0.6 + (selectedTrend?.score || 0.5) * 0.4) * 100
+            );
+            return (
+              <div key={i} className="impact-item">
+                <div className="impact-header">
+                  <span className="impact-arrow">{selectedTheme}</span>
+                  <span className="impact-connector">&rarr;</span>
+                  <span className="impact-target">{impact.target}</span>
+                  <span className={`impact-severity ${severity > 70 ? 'high' : severity > 40 ? 'moderate' : 'low'}`}>
+                    {severity}%
+                  </span>
+                  <span className={`impact-status ${impact.target_sentiment === 'HOT' ? 'hot' : 'cool'}`}>
+                    {impact.target_sentiment}
+                  </span>
+                </div>
+                <div className="impact-description">{impact.description}</div>
+                <div className="severity-bar-track">
+                  <div
+                    className={`severity-bar-fill ${severity > 70 ? 'high' : severity > 40 ? 'moderate' : 'low'}`}
+                    style={{ width: `${severity}%` }}
+                  />
+                </div>
               </div>
-              <div className="impact-description">{impact.description}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
+
+      {/* Portfolio Signal */}
+      {signal && (
+        <div className="panel portfolio-panel">
+          <h3>Portfolio Signal: {selectedTheme}</h3>
+          <div className="portfolio-signal">
+            <span className={`signal-action ${signal.action.toLowerCase().replace(/\s/g, '-')}`}>
+              {signal.action}
+            </span>
+            <p className="signal-rationale">{signal.rationale}</p>
+            <div className="signal-stats">
+              <span>HOT Activity: <strong>{signal.hot_pct}%</strong></span>
+              <span>Avg Intensity: <strong>{signal.avg_score}%</strong></span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 /* ===== Tab Content: Analytics ===== */
 
-const AnalyticsTab = ({ distribution, summary }) => {
+const AnalyticsTab = ({ distribution, summary, analyticsExt }) => {
   if (!distribution || distribution.length === 0) {
     return (
       <div className="tab-content">
@@ -351,13 +416,74 @@ const AnalyticsTab = ({ distribution, summary }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Volatility Ranking */}
+      {analyticsExt?.volatility_ranking && analyticsExt.volatility_ranking.length > 0 && (
+        <div className="panel">
+          <h3>Volatility Ranking</h3>
+          <div className="chart-container" style={{ height: '200px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analyticsExt.volatility_ranking} layout="vertical">
+                <XAxis type="number" stroke="#555" tick={{ fill: '#888', fontSize: 11 }} />
+                <YAxis type="category" dataKey="theme" stroke="#555" tick={{ fill: '#ccc', fontSize: 12 }} width={90} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2a2a4a" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1a1a2e', borderColor: '#333', color: '#fff', borderRadius: '8px' }}
+                  formatter={(value) => [`${(value * 100).toFixed(1)}%`, 'Volatility']}
+                />
+                <Bar dataKey="volatility" radius={[0, 4, 4, 0]}>
+                  {analyticsExt.volatility_ranking.map((entry, i) => (
+                    <Cell key={i} fill={THEME_COLORS[entry.theme] || '#888'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Theme Momentum */}
+      {analyticsExt?.momentum && (
+        <div className="panel">
+          <h3>Theme Momentum</h3>
+          <div className="momentum-grid">
+            {Object.entries(analyticsExt.momentum).map(([theme, m]) => {
+              const d = distribution.find(x => x.theme === theme);
+              const hotPct = d && d.total > 0 ? Math.round((d.hot / d.total) * 100) : 0;
+              return (
+                <div key={theme} className="momentum-card">
+                  <div className="momentum-header">
+                    <span className="legend-dot" style={{ backgroundColor: THEME_COLORS[theme] || '#888' }} />
+                    <span className="momentum-theme">{theme}</span>
+                    <span className={`momentum-direction ${m.direction}`}>
+                      {m.direction === 'heating' ? '\u2191 Heating' : m.direction === 'cooling' ? '\u2193 Cooling' : '\u2192 Flat'}
+                    </span>
+                  </div>
+                  {d && d.total > 0 && (
+                    <div className="ratio-bar-track">
+                      <div className="ratio-bar-hot" style={{ width: `${hotPct}%` }} />
+                      <div className="ratio-bar-cool" style={{ width: `${100 - hotPct}%` }} />
+                    </div>
+                  )}
+                  <div className="momentum-meta">
+                    <span className="ratio-label">{hotPct}% HOT</span>
+                    <span className="momentum-strength">Strength: {m.strength}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 /* ===== Tab Content: Memory ===== */
 
-const MemoryTab = ({ memory }) => {
+const MemoryTab = ({ memory, analyticsExt }) => {
+  const [filterTheme, setFilterTheme] = useState(null);
+
   if (!memory || memory.length === 0) {
     return (
       <div className="tab-content">
@@ -369,17 +495,74 @@ const MemoryTab = ({ memory }) => {
     );
   }
 
+  const filteredMemory = filterTheme
+    ? memory.filter(e => e.theme === filterTheme)
+    : memory;
+
+  const hotCount = memory.filter(e => e.sentiment === 'HOT').length;
+  const hotPct = Math.round((hotCount / memory.length) * 100);
+  const uniqueThemes = [...new Set(memory.map(e => e.theme))];
+
   return (
     <div className="tab-content">
+      {/* Stats Strip */}
+      <div className="memory-stats-strip">
+        <div className="memory-stat">
+          <span className="memory-stat-value">{memory.length}</span>
+          <span className="memory-stat-label">Total Events</span>
+        </div>
+        <div className="memory-stat">
+          <span className="memory-stat-value hot">{hotPct}%</span>
+          <span className="memory-stat-label">HOT Rate</span>
+        </div>
+        <div className="memory-stat">
+          <span className="memory-stat-value">{uniqueThemes.length}</span>
+          <span className="memory-stat-label">Themes Active</span>
+        </div>
+        <div className="memory-stat">
+          <span className="memory-stat-value">
+            {analyticsExt ? `${analyticsExt.time_range_minutes}m` : '--'}
+          </span>
+          <span className="memory-stat-label">Time Span</span>
+        </div>
+      </div>
+
+      {/* Filter Chips */}
+      <div className="filter-chips">
+        <button
+          className={`filter-chip ${!filterTheme ? 'active' : ''}`}
+          onClick={() => setFilterTheme(null)}
+        >
+          All
+        </button>
+        {uniqueThemes.map(theme => (
+          <button
+            key={theme}
+            className={`filter-chip ${filterTheme === theme ? 'active' : ''}`}
+            onClick={() => setFilterTheme(filterTheme === theme ? null : theme)}
+          >
+            <span className="legend-dot" style={{ backgroundColor: THEME_COLORS[theme] }} />
+            {theme}
+          </button>
+        ))}
+      </div>
+
+      {/* Event Log */}
       <div className="panel">
-        <h3>Institutional Memory <span className="panel-subtitle">{memory.length} events tracked</span></h3>
+        <h3>
+          Event Log
+          <span className="panel-subtitle">
+            {filterTheme ? `${filteredMemory.length} of ${memory.length}` : `${memory.length}`} events
+          </span>
+        </h3>
         <div className="memory-list">
-          {memory.slice().reverse().map((event, i) => (
-            <div key={i} className="memory-item">
+          {filteredMemory.slice().reverse().map((event, i) => (
+            <div key={i} className={`memory-item ${event.sentiment === 'HOT' ? 'memory-hot' : 'memory-cool'}`}>
               <div className="memory-item-header">
                 <span className={`memory-badge ${event.sentiment === 'HOT' ? 'hot' : 'cool'}`}>
                   {event.theme}
                 </span>
+                <span className="memory-score">{Math.round(event.score * 100)}%</span>
                 <span className="memory-time">
                   {new Date(event.timestamp).toLocaleTimeString()}
                 </span>
@@ -405,10 +588,10 @@ const MacroDashboard = () => {
   const [alerts, setAlerts] = useState([]);
   const [impacts, setImpacts] = useState([]);
   const [distribution, setDistribution] = useState([]);
+  const [analyticsExt, setAnalyticsExt] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [updatedThemes, setUpdatedThemes] = useState(new Set());
-  const [dataSource, setDataSource] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const selectedRef = useRef(null);
   const prevDataRef = useRef({});
@@ -433,12 +616,13 @@ const MacroDashboard = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const [trendsRes, memoryRes, summaryRes, alertsRes, distRes] = await Promise.all([
+      const [trendsRes, memoryRes, summaryRes, alertsRes, distRes, analyticsExtRes] = await Promise.all([
         fetch(`${API_URL}/api/trends`),
         fetch(`${API_URL}/api/memory`),
         fetch(`${API_URL}/api/summary`),
         fetch(`${API_URL}/api/alerts`),
-        fetch(`${API_URL}/api/distribution`)
+        fetch(`${API_URL}/api/distribution`),
+        fetch(`${API_URL}/api/analytics-extended`)
       ]);
 
       const trends = await trendsRes.json();
@@ -446,6 +630,7 @@ const MacroDashboard = () => {
       const summaryData = await summaryRes.json();
       const alertsData = await alertsRes.json();
       const distData = await distRes.json();
+      const analyticsExtData = await analyticsExtRes.json();
 
       // Detect which themes just got new data
       const changed = new Set();
@@ -464,11 +649,9 @@ const MacroDashboard = () => {
       setSummary(summaryData);
       setAlerts(alertsData);
       setDistribution(distData);
+      setAnalyticsExt(analyticsExtData);
       setConnectionStatus('connected');
       setLastUpdated(new Date());
-      if (trends.length > 0 && trends[0].data_source) {
-        setDataSource(trends[0].data_source);
-      }
 
       if (changed.size > 0) {
         setUpdatedThemes(changed);
@@ -501,13 +684,13 @@ const MacroDashboard = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab selectedTrend={selectedTrend} themeHistory={themeHistory} summary={summary} />;
+        return <OverviewTab selectedTrend={selectedTrend} themeHistory={themeHistory} summary={summary} analyticsExt={analyticsExt} />;
       case 'impacts':
-        return <ImpactsTab impacts={impacts} selectedTheme={selectedTrend?.name} />;
+        return <ImpactsTab impacts={impacts} selectedTheme={selectedTrend?.name} selectedTrend={selectedTrend} analyticsExt={analyticsExt} />;
       case 'analytics':
-        return <AnalyticsTab distribution={distribution} summary={summary} />;
+        return <AnalyticsTab distribution={distribution} summary={summary} analyticsExt={analyticsExt} />;
       case 'memory':
-        return <MemoryTab memory={memory} />;
+        return <MemoryTab memory={memory} analyticsExt={analyticsExt} />;
       default:
         return null;
     }
@@ -518,7 +701,7 @@ const MacroDashboard = () => {
       <header className="dashboard-header">
         <h1 className="dashboard-title">Global Macro Tracker</h1>
         <div className="header-meta">
-          <ConnectionIndicator status={connectionStatus} dataSource={dataSource} />
+          <ConnectionIndicator status={connectionStatus} />
           {lastUpdated && (
             <span className="last-updated">
               Updated {lastUpdated.toLocaleTimeString()}
